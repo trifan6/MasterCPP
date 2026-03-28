@@ -12,9 +12,9 @@
 #include <QUrl>
 #include <QFormLayout>
 #include <QShortcut>
-#include "AdminService.h"
-#include "UserService.h"
-#include "WatchlistTableView.h"
+#include "../Services/AdminService.h"
+#include "../Services/UserService.h"
+#include "../Services/WatchlistTableView.h"
 
 class GUI : public QMainWindow
 {
@@ -56,7 +56,7 @@ private slots:
     void displayCurrentData();
     void saveAdminData();
     void saveUserData();
-    void playVideoInBrowser(string& url);
+    void playVideoInBrowser(const string& url);
     void undo();
     void redo();
 

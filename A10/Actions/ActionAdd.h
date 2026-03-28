@@ -1,7 +1,7 @@
 #pragma once
 #include "Action.h"
-#include "Repository.h"
-#include "Tutorial.h"
+#include "../Repository/Repository.h"
+#include "../Domain/Tutorial.h"
 
 class ActionAdd : public Action
 {

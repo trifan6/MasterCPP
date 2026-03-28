@@ -12,7 +12,7 @@ int WatchlistTableView::rowCount(const QModelIndex& parent) const {
 }
 
 int WatchlistTableView::columnCount(const QModelIndex& parent) const {
-    return 5; // Title, Presenter, Duration, Likes, Link
+    return 5;
 }
 
 QVariant WatchlistTableView::data(const QModelIndex& index, int role) const {

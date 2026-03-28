@@ -2,10 +2,10 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-#include "Action.h"
-#include "Exceptions.h"
+#include "../Actions/Action.h"
+#include "../Exceptions/Exceptions.h"
 #include "FileSaver.h"
-#include "Tutorial.h"
+#include "../Domain/Tutorial.h"
 
 class Repository
 {

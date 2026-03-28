@@ -172,39 +172,43 @@ void GUI::switchToUserMode()
 
 void GUI::showAdminTutorials()
 {
-    QDialog* tutorialDialog = new QDialog(this);
-    tutorialDialog->setWindowTitle("All Tutorials");
-    tutorialDialog->resize(800, 600);
+    try {
+        vector<Tutorial> tutorials = adminService.get_all_tutorials();
 
-    QTableWidget* table = new QTableWidget(tutorialDialog);
-    table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    table->setColumnCount(5);
-    table->setHorizontalHeaderLabels({"Title", "Presenter", "Duration", "Likes", "Link"});
-    table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch); // Title
-    table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch); // Presenter
-    table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents); // Duration
-    table->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents); // Likes
-    table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch); // Link
+        QDialog* tutorialDialog = new QDialog(this);
+        tutorialDialog->setWindowTitle("All Tutorials");
+        tutorialDialog->resize(800, 600);
 
+        QTableWidget* table = new QTableWidget(tutorialDialog);
+        table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        table->setColumnCount(5);
+        table->setHorizontalHeaderLabels({"Title", "Presenter", "Duration", "Likes", "Link"});
+        table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+        table->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+        table->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+        table->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+        table->horizontalHeader()->setSectionResizeMode(4, QHeaderView::Stretch);
 
-    vector<Tutorial> tutorials = adminService.get_all_tutorials();
+        table->setRowCount(tutorials.size());
+        table->setMinimumWidth(1000);
+        for (int i = 0; i < tutorials.size(); i++)
+        {
+            Tutorial& t = tutorials[i];
+            table->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(t.get_title())));
+            table->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(t.get_presenter())));
+            table->setItem(i, 2, new QTableWidgetItem(QString("%1:%2").arg(t.get_minutes()).arg(t.get_seconds(), 2, 10, QChar('0'))));
+            table->setItem(i, 3, new QTableWidgetItem(QString::number(t.get_likes())));
+            table->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(t.get_link())));
+        }
 
-    table->setRowCount(tutorials.size());
-    table->setMinimumWidth(1000);
-    for (int i = 0; i < tutorials.size(); i++)
-    {
-        Tutorial& t = tutorials[i];
-        table->setItem(i, 0, new QTableWidgetItem(QString::fromStdString(t.get_title())));
-        table->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(t.get_presenter())));
-        table->setItem(i, 2, new QTableWidgetItem(QString("%1:%2").arg(t.get_minutes()).arg(t.get_seconds(), 2, 10, QChar('0'))));
-        table->setItem(i, 3, new QTableWidgetItem(QString::number(t.get_likes())));
-        table->setItem(i, 4, new QTableWidgetItem(QString::fromStdString(t.get_link())));
+        QVBoxLayout* layout = new QVBoxLayout(tutorialDialog);
+        layout->addWidget(table);
+        tutorialDialog->setLayout(layout);
+        tutorialDialog->exec();
+
+    } catch (const std::exception& e) {
+        QMessageBox::information(this, "Notice", e.what()); // Catches "No tutorials available!"
     }
-
-    QVBoxLayout* layout = new QVBoxLayout(tutorialDialog);
-    layout->addWidget(table);
-    tutorialDialog->setLayout(layout);
-    tutorialDialog->exec();
 }
 
 void GUI::selectFileFormat()
@@ -229,21 +233,31 @@ void GUI::displayCurrentData()
 
 void GUI::saveAdminData()
 {
-    string format = this->currentFormat.toStdString();
-    string filename = "database";
-    this->adminService.saveDataToFileSaver(format, filename);
-    QMessageBox::information(this, "Saved", "Admin data saved successfully!" );
+    try {
+        string format = this->currentFormat.toStdString();
+        string filename = "database";
+        this->adminService.saveDataToFileSaver(format, filename);
+        QMessageBox::information(this, "Saved", "Admin data saved successfully!" );
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Error", e.what());
+    }
 }
 
 void GUI::saveUserData()
 {
-    string format = this->currentFormat.toStdString();
-    string filename = "watchlist";
-    this->adminService.saveDataToFileSaver(format, filename);
-    QMessageBox::information(this, "Saved", "Watchlist saved successfully!" );
+    try {
+        string format = this->currentFormat.toStdString();
+        string filename = "watchlist";
+
+        this->userService.saveDataToFileSaver(format, filename);
+
+        QMessageBox::information(this, "Saved", "Watchlist saved successfully!" );
+    } catch (const std::exception& e) {
+        QMessageBox::warning(this, "Error", e.what());
+    }
 }
 
-void GUI::playVideoInBrowser(string& videoURL)
+void GUI::playVideoInBrowser(const string& videoURL)
 {
     QDesktopServices::openUrl(QUrl(QString::fromStdString(videoURL)));
 }
@@ -257,70 +271,80 @@ void GUI::showUserTutorials()
                                               "", &ok);
     if (!ok || presenter.isEmpty()) return;
 
-    vector<Tutorial> tutorials = userService.see_tutorials_of_given_presenter(presenter.toStdString());
+    try {
+        vector<Tutorial> tutorials = userService.see_tutorials_of_given_presenter(presenter.toStdString());
 
-    if (tutorials.empty()) {
-        QMessageBox::information(this, "No Tutorials", "No tutorials found for this presenter.");
-        return;
-    }
+        if (tutorials.empty()) {
+            QMessageBox::information(this, "No Tutorials", "No tutorials found for this presenter.");
+            return;
+        }
 
-    int index = 0;
-    while (true) {
-        if (index >= tutorials.size()) index = 0;
+        int index = 0;
+        while (true) {
+            if (index >= tutorials.size()) index = 0;
 
-        Tutorial& t = tutorials[index];
-        playVideoInBrowser(t.get_link());
+            Tutorial& t = tutorials[index];
 
-        // Build dialog
-        QDialog dialog(this);
-        dialog.setWindowTitle("Now Playing: " + QString::fromStdString(t.get_title()));
+            QDialog dialog(this);
+            dialog.setWindowTitle("Now Playing: " + QString::fromStdString(t.get_title()));
 
-        QVBoxLayout* layout = new QVBoxLayout(&dialog);
+            QVBoxLayout* layout = new QVBoxLayout(&dialog);
 
-        QString info = QString("Title: %1\nPresenter: %2\nDuration: %3:%4\nLikes: %5\nLink: %6")
-                           .arg(QString::fromStdString(t.get_title()))
-                           .arg(QString::fromStdString(t.get_presenter()))
-                           .arg(t.get_minutes())
-                           .arg(t.get_seconds(), 2, 10, QChar('0'))
-                           .arg(t.get_likes())
-                           .arg(QString::fromStdString(t.get_link()));
-        layout->addWidget(new QLabel(info));
+            QString info = QString("Title: %1\nPresenter: %2\nDuration: %3:%4\nLikes: %5\nLink: %6")
+                               .arg(QString::fromStdString(t.get_title()))
+                               .arg(QString::fromStdString(t.get_presenter()))
+                               .arg(t.get_minutes())
+                               .arg(t.get_seconds(), 2, 10, QChar('0'))
+                               .arg(t.get_likes())
+                               .arg(QString::fromStdString(t.get_link()));
+            layout->addWidget(new QLabel(info));
 
-        QDialogButtonBox* buttonBox = new QDialogButtonBox;
-        QPushButton* stopBtn = buttonBox->addButton("Stop", QDialogButtonBox::RejectRole);
-        QPushButton* likeBtn = buttonBox->addButton("Like", QDialogButtonBox::ActionRole);
-        QPushButton* addBtn = buttonBox->addButton("Add to Watchlist", QDialogButtonBox::ActionRole);
-        QPushButton* nextBtn = buttonBox->addButton("Next", QDialogButtonBox::AcceptRole);
-        layout->addWidget(buttonBox);
+            QDialogButtonBox* buttonBox = new QDialogButtonBox;
+            QPushButton* playBtn = buttonBox->addButton("Play Video", QDialogButtonBox::ActionRole); // NEW PLAY BUTTON
+            QPushButton* stopBtn = buttonBox->addButton("Stop", QDialogButtonBox::RejectRole);
+            QPushButton* likeBtn = buttonBox->addButton("Like", QDialogButtonBox::ActionRole);
+            QPushButton* addBtn = buttonBox->addButton("Add to Watchlist", QDialogButtonBox::ActionRole);
+            QPushButton* nextBtn = buttonBox->addButton("Next", QDialogButtonBox::AcceptRole);
+            layout->addWidget(buttonBox);
 
-        // Connections
-        connect(likeBtn, &QPushButton::clicked, [&]() {
-            userService.like_tutorial(t);
-            QMessageBox::information(&dialog, "Liked", "You liked this tutorial.");
-        });
+            connect(playBtn, &QPushButton::clicked, [&]() {
+                playVideoInBrowser(t.get_link());
+            });
 
-        connect(addBtn, &QPushButton::clicked, [&]() {
-            try {
-                userService.add_to_watch_list(t);
-                QMessageBox::information(&dialog, "Added", "Tutorial added to watchlist.");
-            } catch (const std::exception& e) {
-                QMessageBox::warning(&dialog, "Error", e.what());
-            }
-        });
+            connect(likeBtn, &QPushButton::clicked, [&]() {
+                try {
+                    userService.like_tutorial(t);
+                    QMessageBox::information(&dialog, "Liked", "You liked this tutorial.");
+                } catch (const std::exception& e) {
+                    QMessageBox::critical(&dialog, "Error", e.what());
+                }
+            });
 
-        connect(stopBtn, &QPushButton::clicked, [&]() {
-            dialog.done(0);  // Custom code for stop
-        });
+            connect(addBtn, &QPushButton::clicked, [&]() {
+                try {
+                    userService.add_to_watch_list(t);
+                    QMessageBox::information(&dialog, "Added", "Tutorial added to watchlist.");
+                } catch (const std::exception& e) {
+                    QMessageBox::warning(&dialog, "Error", e.what());
+                }
+            });
 
-        connect(nextBtn, &QPushButton::clicked, [&]() {
-            dialog.done(1);  // Next video
-        });
+            connect(stopBtn, &QPushButton::clicked, [&]() {
+                dialog.done(0);
+            });
 
-        int result = dialog.exec();
-        if (result == 0) // Stop pressed
-            break;
-        else
-            index++;
+            connect(nextBtn, &QPushButton::clicked, [&]() {
+                dialog.done(1);
+            });
+
+            int result = dialog.exec();
+            if (result == 0)
+                break;
+            else
+                index++;
+        }
+    } catch (const std::exception& e) {
+        QMessageBox::information(this, "Notice", e.what());
     }
 }
 
@@ -386,76 +410,78 @@ void GUI::displayWatchlist() {
 
 void GUI::manageWatchlist()
 {
-    vector<Tutorial> watchlist = userService.see_watch_list();
+    try {
+        vector<Tutorial> watchlist = userService.see_watch_list();
 
-    if (watchlist.empty()) {
-        QMessageBox::information(this, "Watchlist", "Your watchlist is empty.");
-        return;
-    }
+        QDialog* manageDialog = new QDialog(this);
+        manageDialog->setWindowTitle("Manage Watchlist");
+        manageDialog->resize(800, 600);
 
-    // Create dialog with delete and like options
-    QDialog* manageDialog = new QDialog(this);
-    manageDialog->setWindowTitle("Manage Watchlist");
-    manageDialog->resize(800, 600);
+        QTableWidget* table = new QTableWidget(manageDialog);
+        table->setColumnCount(6);
+        table->setHorizontalHeaderLabels({"#", "Title", "Presenter", "Duration", "Likes", "Link"});
 
-    QTableWidget* table = new QTableWidget(manageDialog);
-    table->setColumnCount(6);
-    table->setHorizontalHeaderLabels({"#", "Title", "Presenter", "Duration", "Likes", "Link"});
-
-    table->setRowCount(watchlist.size());
-    for (int i = 0; i < watchlist.size(); i++) {
-        Tutorial& t = watchlist[i];
-        table->setItem(i, 0, new QTableWidgetItem(QString::number(i+1)));
-        table->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(t.get_title())));
-        table->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(t.get_presenter())));
-        table->setItem(i, 3, new QTableWidgetItem(QString("%1:%2").arg(t.get_minutes()).arg(t.get_seconds(), 2, 10, QChar('0'))));
-        table->setItem(i, 4, new QTableWidgetItem(QString::number(t.get_likes())));
-        table->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(t.get_link())));
-    }
-
-    QPushButton* deleteButton = new QPushButton("Delete Selected", manageDialog);
-    QPushButton* likeButton = new QPushButton("Like Selected", manageDialog);
-    QPushButton* closeButton = new QPushButton("Close", manageDialog);
-
-    connect(deleteButton, &QPushButton::clicked, [this, table, manageDialog]() {
-        int row = table->currentRow();
-        if (row >= 0) {
-            Tutorial t = userService.see_watch_list()[row];
-            userService.remove_from_watch_list(t);
-            QMessageBox::information(this, "Success", "Tutorial removed from watchlist!");
-            manageDialog->close();
-            this->manageWatchlist(); // Refresh
-        } else {
-            QMessageBox::warning(this, "Error", "Please select a tutorial first!");
+        table->setRowCount(watchlist.size());
+        for (int i = 0; i < watchlist.size(); i++) {
+            Tutorial& t = watchlist[i];
+            table->setItem(i, 0, new QTableWidgetItem(QString::number(i+1)));
+            table->setItem(i, 1, new QTableWidgetItem(QString::fromStdString(t.get_title())));
+            table->setItem(i, 2, new QTableWidgetItem(QString::fromStdString(t.get_presenter())));
+            table->setItem(i, 3, new QTableWidgetItem(QString("%1:%2").arg(t.get_minutes()).arg(t.get_seconds(), 2, 10, QChar('0'))));
+            table->setItem(i, 4, new QTableWidgetItem(QString::number(t.get_likes())));
+            table->setItem(i, 5, new QTableWidgetItem(QString::fromStdString(t.get_link())));
         }
-    });
 
-    connect(likeButton, &QPushButton::clicked, [this, table]() {
-        int row = table->currentRow();
-        if (row >= 0) {
-            Tutorial t = userService.see_watch_list()[row];
-            userService.like_tutorial(t);
-            QMessageBox::information(this, "Success", "Tutorial liked!");
-            table->item(row, 4)->setText(QString::number(t.get_likes() + 1));
-        } else {
-            QMessageBox::warning(this, "Error", "Please select a tutorial first!");
-        }
-    });
+        QPushButton* deleteButton = new QPushButton("Delete Selected", manageDialog);
+        QPushButton* likeButton = new QPushButton("Like Selected", manageDialog);
+        QPushButton* closeButton = new QPushButton("Close", manageDialog);
 
-    connect(closeButton, &QPushButton::clicked, manageDialog, &QDialog::close);
+        connect(deleteButton, &QPushButton::clicked, [this, table, manageDialog]() {
+            int row = table->currentRow();
+            if (row >= 0) {
+                Tutorial t = userService.see_watch_list()[row];
+                userService.remove_from_watch_list(t);
+                QMessageBox::information(this, "Success", "Tutorial removed from watchlist!");
+                manageDialog->close();
+                this->manageWatchlist();
+            } else {
+                QMessageBox::warning(this, "Error", "Please select a tutorial first!");
+            }
+        });
 
-    QVBoxLayout* mainLayout = new QVBoxLayout(manageDialog);
-    QHBoxLayout* buttonLayout = new QHBoxLayout();
+        connect(likeButton, &QPushButton::clicked, [this, table]() {
+            int row = table->currentRow();
+            if (row >= 0) {
+                Tutorial t = userService.see_watch_list()[row];
+                try {
+                    userService.like_tutorial(t);
+                    QMessageBox::information(this, "Success", "Tutorial liked!");
+                    table->item(row, 4)->setText(QString::number(t.get_likes()));
+                } catch (const std::exception& e) {
+                    QMessageBox::critical(this, "Error", e.what());
+                }
+            } else {
+                QMessageBox::warning(this, "Error", "Please select a tutorial first!");
+            }
+        });
 
-    buttonLayout->addWidget(deleteButton);
-    buttonLayout->addWidget(likeButton);
-    buttonLayout->addWidget(closeButton);
+        connect(closeButton, &QPushButton::clicked, manageDialog, &QDialog::close);
 
-    mainLayout->addWidget(table);
-    mainLayout->addLayout(buttonLayout);
-    manageDialog->setLayout(mainLayout);
-    manageDialog->exec();
+        QVBoxLayout* mainLayout = new QVBoxLayout(manageDialog);
+        QHBoxLayout* buttonLayout = new QHBoxLayout();
 
+        buttonLayout->addWidget(deleteButton);
+        buttonLayout->addWidget(likeButton);
+        buttonLayout->addWidget(closeButton);
+
+        mainLayout->addWidget(table);
+        mainLayout->addLayout(buttonLayout);
+        manageDialog->setLayout(mainLayout);
+        manageDialog->exec();
+
+    } catch (const std::exception& e) {
+        QMessageBox::information(this, "Watchlist", e.what());
+    }
 }
 
 void GUI::addTutorial()
@@ -526,56 +552,54 @@ void GUI::addTutorial()
 
 void GUI::removeTutorial()
 {
-    bool ok;
-    int pos = QInputDialog::getInt(this, "Remove Tutorial",
-                                  "Enter tutorial position to remove:",
-                                  1, 1, adminService.get_all_tutorials().size(),
-                                  1, &ok);
-    if (!ok) return;
-
     try {
-        adminService.remove_tutorial(pos); // Convert to 0-based index
+        int max_size = adminService.get_all_tutorials().size();
+
+        bool ok;
+        int pos = QInputDialog::getInt(this, "Remove Tutorial",
+                                      "Enter tutorial position to remove:",
+                                      1, 1, max_size,
+                                      1, &ok);
+        if (!ok) return;
+
+        adminService.remove_tutorial(pos);
         QMessageBox::information(this, "Success", "Tutorial removed successfully!");
     } catch (const std::exception& e) {
-        QMessageBox::critical(this, "Error", QString("Failed to remove tutorial: ") + e.what());
+        QMessageBox::information(this, "Notice", e.what());
     }
 }
 
 void GUI::updateTutorial()
 {
-    vector<Tutorial>& tutorials = adminService.get_all_tutorials();
-    if (tutorials.empty()) {
-        QMessageBox::information(this, "No Tutorials", "There are no tutorials to update.");
-        return;
-    }
-
-    bool ok;
-    QStringList fields = {"title", "presenter", "minutes", "seconds", "likes", "link"};
-
-    int pos = QInputDialog::getInt(this, "Update Tutorial",
-                                  "Enter tutorial position to update (1-" +
-                                  QString::number(tutorials.size()) + "):",
-                                  1, 1, tutorials.size(), 1, &ok);
-    if (!ok) return;
-
-    QString field = QInputDialog::getItem(this, "Update Field",
-                                        "Select field to update:",
-                                        fields, 0, false, &ok);
-    if (!ok) return;
-
-    QString value = QInputDialog::getText(this, "New Value",
-                                        "Enter new value for " + field + ":",
-                                        QLineEdit::Normal, "", &ok);
-    if (!ok || value.isEmpty()) return;
-
     try {
+        vector<Tutorial>& tutorials = adminService.get_all_tutorials();
+
+        bool ok;
+        QStringList fields = {"title", "presenter", "minutes", "seconds", "likes", "link"};
+
+        int pos = QInputDialog::getInt(this, "Update Tutorial",
+                                      "Enter tutorial position to update (1-" +
+                                      QString::number(tutorials.size()) + "):",
+                                      1, 1, tutorials.size(), 1, &ok);
+        if (!ok) return;
+
+        QString field = QInputDialog::getItem(this, "Update Field",
+                                            "Select field to update:",
+                                            fields, 0, false, &ok);
+        if (!ok) return;
+
+        QString value = QInputDialog::getText(this, "New Value",
+                                            "Enter new value for " + field + ":",
+                                            QLineEdit::Normal, "", &ok);
+        if (!ok || value.isEmpty()) return;
+
         adminService.update_tutorial(pos, field.toStdString(), value.toStdString());
         QMessageBox::information(this, "Success", "Tutorial updated successfully!");
+
     } catch (const std::exception& e) {
-        QMessageBox::critical(this, "Error", QString("Failed to update tutorial: ") + e.what());
+        QMessageBox::information(this, "Notice", e.what());
     }
 }
-
 void GUI::setupShortcuts()
 {
     QShortcut* undoShortcut = new QShortcut(QKeySequence("Ctrl+Z"), this);

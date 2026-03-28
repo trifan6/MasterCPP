@@ -3,7 +3,12 @@
 Repository::Repository(string filename)
 {
 	this->filename = filename;
-	this->load_from_file();
+	try {
+		this->load_from_file();
+	} catch (const RepositoryError& e) {
+		ofstream file(this->filename);
+		file.close();
+	}
 }
 
 Repository::~Repository()

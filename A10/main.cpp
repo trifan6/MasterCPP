@@ -1,6 +1,6 @@
-#include "GUI.h"
-#include "AdminService.h"
-#include "UserService.h"
+#include "UI/GUI.h"
+#include "Services/AdminService.h"
+#include "Services/UserService.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])

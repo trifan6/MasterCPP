@@ -1,10 +1,10 @@
 #include "AdminService.h"
 
-#include "ActionAdd.h"
-#include "ActionRemove.h"
-#include "ActionUpdate.h"
-#include "CSVFileSaver.h"
-#include "HTMLFileSaver.h"
+#include "../Actions/ActionAdd.h"
+#include "../Actions/ActionRemove.h"
+#include "../Actions/ActionUpdate.h"
+#include "../Repository/CSVFileSaver.h"
+#include "../Repository/HTMLFileSaver.h"
 
 AdminService::AdminService(Repository& repo) : repo(repo)
 {
@@ -61,13 +61,13 @@ void AdminService::update_tutorial(int position, string to_update, string update
 
 	if (to_update == "title")
 	{
-		TutorialValidator::validate_title(to_update);
+		TutorialValidator::validate_title(update_info);
 		newTutorial.set_title(update_info);
 
 	}
 	else if (to_update == "presenter")
 	{
-		TutorialValidator::validate_presenter(to_update);
+		TutorialValidator::validate_presenter(update_info);
 		newTutorial.set_presenter(update_info);
 
 	}
@@ -103,7 +103,7 @@ void AdminService::update_tutorial(int position, string to_update, string update
 	}
 	else if (to_update == "link")
 	{
-		TutorialValidator::validate_link(to_update);
+		TutorialValidator::validate_link(update_info);
 		newTutorial.set_link(update_info);
 
 	}

@@ -50,20 +50,25 @@ void UserService::remove_from_watch_list(Tutorial& tutorial)
 
 void UserService::like_tutorial(Tutorial& tutorial)
 {
-	int pos = this->DataBase.find(tutorial);
-	if (pos == -1)
-	{
-		throw ServiceError("Tutorial not found in the database");
+	int db_pos = this->DataBase.find(tutorial);
+	if (db_pos == -1) {
+		throw ServiceError("Tutorial not found in the database. It may have been deleted by an Admin!");
 	}
 
-	Tutorial& db_tutorial = this->DataBase[pos];
-
+	Tutorial& db_tutorial = this->DataBase[db_pos];
 	int current_likes = db_tutorial.get_likes();
+	db_tutorial.set_likes(current_likes + 1);
+
+	int wl_pos = this->WatchList.find(tutorial);
+	if (wl_pos != -1) {
+		Tutorial& wl_tutorial = this->WatchList[wl_pos];
+		wl_tutorial.set_likes(current_likes + 1);
+	}
+
 	tutorial.set_likes(current_likes + 1);
 
-	this->WatchList.save_to_file();
 	this->DataBase.save_to_file();
-
+	this->WatchList.save_to_file();
 }
 
 vector<Tutorial>& UserService::see_watch_list()

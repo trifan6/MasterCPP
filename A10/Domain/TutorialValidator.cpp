@@ -10,12 +10,12 @@ void TutorialValidator::validate(Tutorial &tutorial)
     validate_link(tutorial.get_link());
 }
 
-void TutorialValidator::validate_title(string &new_title)
+void TutorialValidator::validate_title(const string &new_title)
 {
     if (new_title.empty()) throw ValidationError("Title cannot be empty");
 }
 
-void TutorialValidator::validate_presenter(string &new_presenter)
+void TutorialValidator::validate_presenter(const string &new_presenter)
 {
     if (new_presenter.empty()) throw ValidationError("Presenter cannot be empty");
 }
@@ -36,12 +36,12 @@ void TutorialValidator::validate_likes(int new_likes)
     if (new_likes < 0) throw ValidationError("Likes cannot be negative");
 }
 
-void TutorialValidator::validate_link(string &new_link)
+void TutorialValidator::validate_link(const string &new_link)
 {
     if (new_link.empty()) throw ValidationError("Link cannot be empty");
 }
 
-void TutorialValidator::validate_info(string &title, string &presenter, int minutes, int seconds, int likes, string &link)
+void TutorialValidator::validate_info(const string &title, const string &presenter, int minutes, int seconds, int likes, const string &link)
 {
     validate_title(title);
     validate_presenter(presenter);

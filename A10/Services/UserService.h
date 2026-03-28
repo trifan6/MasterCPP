@@ -1,8 +1,8 @@
 #pragma once
-#include "Repository.h"
-#include "Tutorial.h"
-#include "CSVFileSaver.h"
-#include "HTMLFileSaver.h"
+#include "../Repository/Repository.h"
+#include "../Domain/Tutorial.h"
+#include "../Repository/CSVFileSaver.h"
+#include "../Repository/HTMLFileSaver.h"
 using namespace std;
 
 class UserService

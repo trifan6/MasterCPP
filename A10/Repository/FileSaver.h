@@ -1,5 +1,5 @@
 #pragma once
-#include "Tutorial.h"
+#include "../Domain/Tutorial.h"
 #include <string>
 #include <vector>
 #include <fstream>
