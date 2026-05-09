@@ -2,7 +2,6 @@
 
 A full-stack C++ desktop application designed to manage educational video content. Built strictly on a **Layered Architecture** with a custom **Qt Framework** graphical user interface, this project demonstrates advanced Object-Oriented Programming (OOP) principles, memory management, and design patterns.
 
-> **Note to Recruiters:** This project showcases enterprise-level C++ concepts including polymorphic Command Patterns, dynamic file serialization, and Model-View-Controller (MVC) data querying.
 
 ## ✨ Key Features
 
