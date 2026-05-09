@@ -1,7 +1,6 @@
 # 📚 Master C++ | Tutorial Management Application
 
-A full-stack C++ desktop application designed to manage educational video content. Built strictly on a **Layered Architecture** with a custom **Qt Framework** graphical user interface, this project demonstrates advanced Object-Oriented Programming (OOP) principles, memory management, and design patterns.
-
+A full-stack C++ desktop application engineered to manage educational video content. Built on a strict Layered Architecture with a custom Qt Framework graphical user interface, the application leverages advanced Object-Oriented Programming (OOP) principles, efficient memory management, and robust design patterns to deliver a seamless user experience.
 
 ## ✨ Key Features
 
